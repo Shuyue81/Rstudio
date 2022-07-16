@@ -1,0 +1,58 @@
+# step1:Insert Data
+rm(list=ls()) 
+setwd("D:/DT")  
+df=read.csv("2021_080910_703W706Oshutter_all_1.csv") #Read Data
+head(df)  
+table(df$shutter) 
+shuffle.index=sample(1:nrow(df))  
+class(df) 
+
+
+time=as.POSIXct(df$Time)  
+df$hour=strftime(time,"%H") 
+table(df$hour)  
+
+
+#step2 Plot Box Plot
+par(mfrow=c(4,1),mar=c(4,4,1,1),oma=c(1,1,1,1))   
+boxplot(Desk_I ~ hour, data=subset(df,shutter==0.25),
+        ylab = "25%shading",xlab="",
+        outline = FALSE 
+)
+
+boxplot(Desk_I ~ hour, data=subset(df,shutter==0.50),   
+        ylab = "50%shading",xlab="",
+        outline = FALSE 
+)
+
+boxplot(Desk_I ~ hour, data=subset(df,shutter==0.75),  
+        ylab = "75%shading",xlab="",
+        outline = FALSE
+)
+
+boxplot(Desk_I ~ hour, data=subset(df,shutter==1),   
+        ylab = "100%shading",xlab="time",
+        outline = FALSE 
+)
+
+# step3 Plot 
+mean_df=aggregate(Desk_I~shutter+hour,data=df,FUN=mean)  
+head(mean_df)
+
+df_wide=dcast(mean_df,hour~shutter,value.var = 'Desk_I')  
+names(df_wide)=c("hour","shutter0.25","shutter0.5","shutter0.75","shutter1.0") 
+df_wide
+
+
+par(mfrow=c(1,1),mar=c(4,4,2,1),oma=c(1,1,1,1))    
+plot(df_wide$hour, df_wide$shutter0.25, type = "b", pch = 15, lty = 1,
+     xlab = "time",ylab = "illuminance")
+lines(df_wide$hour, df_wide$shutter0.5, type = "b", pch = 16, lty = 2)
+lines(df_wide$hour, df_wide$shutter0.75, type = "b", pch = 17, lty = 3)
+lines(df_wide$hour, df_wide$shutter1.0, type = "b", pch = 18, lty = 4)
+legend("bottomright", inset = 0.02,c("25%shading","50%shaidng","75%shading",
+      "100%shading"),lty = c(1,2,3,4), pch = c(15,16,17,18),bg = "gray")
+
+
+
+
