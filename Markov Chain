@@ -1,0 +1,55 @@
+clear;clc;
+%% Read train set and test set
+Y1=xlsread('data.xlsx');%read total data
+num_20=round(0.2*size(Y1,1));%Take 20% of the total data as the test set
+Y1_1=Y1(1:end-num_20,:);%train set
+Y1_2=Y1(end-num_20:end,:)';%test set
+%% data classification
+Y=Untitled2(Y1_1);%Training set classification: 0.25 is the first type of state, 0.5 is 2nd, 0.75 is 3rd, and 1 is 4th
+%% Markov transition probability is a matrix
+for i=1:4 %Layer 1st loop represents a total of 4 states in the training set data
+    posi1=find(Y==i);%Find the position where the training set data Y is equal to the state i, and the 'length(posi1)' is the total number of states i
+    for j=1:4 %Layer 2nd loop is to count the total number of transitions from state i to state j
+    posi2=find(Y(min(posi1+1,length(Y)))==j);%Count the number of states j at the next time (+1 is the next time), where 'min(posi1+1,length(Y))' is to prevent exceeding the dimension of Y
+    P(i,j)=length(posi2)/length(posi1);%Calculate transition probability matrix
+    end
+end
+sum_1=sum(P,2);%Verify that the sum of each row is 1
+%% forecast
+Y1_22=Untitled2(Y1_2);%Test set classification
+test=[];%Put the predicted value in the matrix 'test'
+test(1)=Y1_22(1);%Set the first element of test to 'Y1_22(1)' for one-to-one correspondence
+for i=1:length(Y1_22)-1 %Traversal test set
+    [~,posi]=max(P(Y1_22(i),:));
+    %Each line of P represents the transition probability vector of a state, 'Y1_ 22(i)' is status. The row number of the transition probability matrix is the state
+    %Then Max is used to find the maximum value of this line, that is, the maximum transition probability of this state, 
+    %and posi represents the position of the maximum transition probability of each line
+    test(i+1)=posi;%Posi also represents the state corresponding to the maximum transition probability, which is the predicted state at the next time
+end
+
+%% Convert the predicted state to a real value
+Test=test;%Allocate matrix memory
+posi11=find(test==1);Test(posi11)=0.25;%Type 1 state is converted 0.25
+posi11=find(test==2);Test(posi11)=0.5;%Type 2 state is converted 0.5
+posi11=find(test==3);Test(posi11)=0.75;%Type 3 state is converted 0.75
+posi11=find(test==4);Test(posi11)=1;%Type 4 state is converted 1
+
+%% Calculate the accuracy of prediction, draw pictures and observe the prediction effect
+err=Test-Y1_2;%Subtract the predicted value from the real value and count the quantity with the difference of 0
+Accuracy=sum(err==0)/length(Test)*100;%Calculate the accuracy of prediction%
+figure
+plot(1:length(Y1_2),Y1_2,'b-*','linewidth',1.5)
+hold on
+plot(1:length(Y1_2),Test,'r->','linewidth',0.5)
+legend('True value','Predicted value');
+set(gca,'fontsize',25);
+
+%% User defined functions for data classification
+function result = Untitled2(h_v)
+for i=1:length(h_v)
+ h_v(i)=ceil(h_v(i)/0.25);  %Classify at 0.25 intervals
+end
+result=h_v;
+end
+
+
